@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride Runner | Product Page</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:system-ui, sans-serif; background:#f6f7f9; color:#1b1f2a; }
+  header { background:#1b1f2a; color:#fff; padding:16px 6%; display:flex; justify-content:space-between; align-items:center; }
+  .cart-badge { background:#ff5a5f; border-radius:20px; padding:4px 12px; font-size:.9rem; }
+  .wrap { max-width:1000px; margin:30px auto; padding:0 5%; display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+  .main-img { height:340px; border-radius:18px; transition:background .3s; display:flex; align-items:center; justify-content:center; font-size:6rem; box-shadow:0 8px 24px rgba(0,0,0,.12); }
+  .thumbs { display:flex; gap:12px; margin-top:14px; }
+  .thumb { flex:1; height:70px; border-radius:12px; border:3px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.8rem; }
+  .thumb.active { border-color:#1b1f2a; }
+  h1 { font-size:2rem; }
+  .stars { color:#f5a623; margin:6px 0 14px; }
+  .desc { color:#555; line-height:1.6; margin-bottom:20px; }
+  label { display:block; font-weight:600; margin:14px 0 6px; }
+  .sizes { display:flex; gap:8px; flex-wrap:wrap; }
+  .size { padding:10px 14px; border:2px solid #d7dae0; border-radius:10px; background:#fff; cursor:pointer; }
+  .size.active { background:#1b1f2a; color:#fff; border-color:#1b1f2a; }
+  .qty { display:flex; align-items:center; gap:14px; }
+  .qty button { width:38px; height:38px; border-radius:50%; border:2px solid #d7dae0; background:#fff; font-size:1.2rem; cursor:pointer; }
+  select { padding:10px; border-radius:10px; border:2px solid #d7dae0; font-size:1rem; }
+  .total { margin:22px 0 14px; font-size:1.8rem; font-weight:700; }
+  .total small { font-size:.9rem; font-weight:400; color:#777; display:block; }
+  .add { width:100%; padding:16px; border:none; border-radius:12px; background:#ff5a5f; color:#fff; font-size:1.1rem; font-weight:600; cursor:pointer; transition:transform .15s; }
+  .add:hover { transform:scale(1.02); }
+  #toast { position:fixed; bottom:30px; left:50%; transform:translate(-50%,100px); background:#1b1f2a; color:#fff; padding:14px 24px; border-radius:30px; opacity:0; transition:all .4s; }
+  #toast.show { transform:translate(-50%,0); opacity:1; }
+  @media (max-width:760px){ .wrap { grid-template-columns:1fr; } .main-img { height:260px; } }
+</style>
+</head>
+<body>
+<header><strong>STRIDE</strong><span class="cart-badge">Cart: <span id="cartCount">0</span></span></header>
+
+<div class="wrap">
+  <div>
+    <div class="main-img" id="mainImg">👟</div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+  <div>
+    <h1>Stride Runner</h1>
+    <div class="stars">★★★★★ <span style="color:#777">(128 reviews)</span></div>
+    <p class="desc">Lightweight everyday running shoe with a breathable mesh upper and a cushioned sole built for long distances.</p>
+
+    <label>Colour</label>
+    <select id="color">
+      <option value="0">Ocean Blue (+$0)</option>
+      <option value="1">Sunset Orange (+$5)</option>
+      <option value="2">Forest Green (+$8)</option>
+    </select>
+
+    <label>Size</label>
+    <div class="sizes" id="sizes"></div>
+
+    <label>Quantity</label>
+    <div class="qty"><button id="minus">−</button><span id="qty">1</span><button id="plus">+</button></div>
+
+    <div class="total"><span id="total">$80.00</span><small id="breakdown"></small></div>
+    <button class="add" id="addBtn">Add to Cart</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+  const BASE = 80;
+  const colors = [
+    { name:'Ocean Blue',    extra:0, bg:'linear-gradient(135deg,#4facfe,#00c6fb)' },
+    { name:'Sunset Orange', extra:5, bg:'linear-gradient(135deg,#ff9a44,#fc6076)' },
+    { name:'Forest Green',  extra:8, bg:'linear-gradient(135deg,#56ab2f,#a8e063)' }
+  ];
+  const views = ['👟','🔄','🔍'];
+  let qty = 1, size = 42, view = 0, cart = 0;
+
+  const $ = id => document.getElementById(id);
+
+  function render() {
+    const c = colors[$('color').value];
+    $('mainImg').style.background = c.bg;
+    $('mainImg').textContent = views[view];
+    document.querySelectorAll('.thumb').forEach((t,i)=>t.classList.toggle('active', i===view));
+    const unit = BASE + c.extra;
+    const subtotal = unit * qty;
+    const discount = qty >= 3 ? subtotal * 0.1 : 0;
+    $('total').textContent = '$' + (subtotal - discount).toFixed(2);
+    $('breakdown').textContent = '$' + unit + ' x ' + qty + (discount ? ' - 10% bulk discount' : '');
+    $('qty').textContent = qty;
+  }
+
+  views.forEach((v,i)=>{
+    const t = document.createElement('div');
+    t.className = 'thumb'; t.textContent = v;
+    t.style.background = '#e6e9ef';
+    t.onclick = () => { view = i; render(); };
+    $('thumbs').appendChild(t);
+  });
+
+  [39,40,41,42,43,44,45].forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'size' + (s===size ? ' active' : ''); b.textContent = s;
+    b.onclick = () => { size = s; document.querySelectorAll('.size').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    $('sizes').appendChild(b);
+  });
+
+  $('plus').onclick  = () => { if (qty < 10) qty++; render(); };
+  $('minus').onclick = () => { if (qty > 1) qty--; render(); };
+  $('color').onchange = render;
+
+  $('addBtn').onclick = () => {
+    cart += qty;
+    $('cartCount').textContent = cart;
+    const toast = $('toast');
+    toast.textContent = '✓ Added ' + qty + ' x Stride Runner (size ' + size + ') to cart';
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 2500);
+  };
+
+  render();
+</script>
+</body>
+</html>
